@@ -1,5 +1,114 @@
 <html>
-<svg width="50" hegiht="50">
+
+<head>
+
+<style type="text/css">
+svg .pumpkin{
+	fill: yellow;
+	stroke: orange;
+	stroke-width: 1;
+}
+div{
+
+}
+</style>
+
+</head>
+
+<body>
+<p>도형 그리기</p>
+ 
+<!--SVG 원-->
+<div>
+<svg>
+
 	<circle cx="25" cy="25" r="22" file="blue" stroke="grey" stroke-width="2"/>
+	
 	</svg>
+</div>
+	<div>
+<svg width="100%">
+
+	<circle cx="25" cy="25" r="25" class="pumpkin"/>
+	
+	</svg>
+</div>
+
+<!--SVG 타원-->
+<!-- 축별 2개의 반지름 값 rx, ry-->
+<div>
+<svg width="100%">
+
+	<ellipse cx="250" cy="25" rx="100" ry="25"/>
+	
+</svg>
+</div>
+	
+<!--SVG 사각형-->
+<!-- 좌측 상단이 0,0 오른쪽으로 움직이면 x 증가, 아래로 내려가면 y 증가-->
+<div>
+<svg>
+
+	<rect x="0" y="0" width="500" height="50"/>
+	
+	</svg>
+</div>
+
+
+<!--SVG 선-->
+<!--선이 보이도록 색상 꼭 지정-->
+<div>
+<svg>
+
+	<line x1="0" y1="0" x2="500" y2="50" stroke="black"/>
+	
+	</svg>
+</div>
+
+<!--SVG 텍스트-->
+<!--왼쪽 모서리에서부터 거리를 x로 지정, 텍스트 타입의 기준선의 위치를 y로 지정-->
+<div>
+<svg width="100%">
+
+	<text x="250" y="25" font-family="serif" font-size="25" file="grey">easy-peasy</text>
+	
+	</svg>
+</div>
+
+<!-- 
+
+svg 공통 프로퍼티
+
+fill : 바탕색 값
+stroke : 선의 색상 값
+strock-width: 선의 두께. 단위는 픽셀
+opacity: 불투명도. 0.0~1.0 사이의 값
+
+---->
+
+<!-- 겹쳐 쌓인 svg 문서요소-->
+<div>
+<svg width="100%">
+
+	<rect x="0" y="0" width="30" height="30" fill="purple"/>
+	<rect x="20" y="5" width="30" height="30" fill="blue"/>
+	<rect x="40" y="10" width="30" height="30" fill="green"/>
+	<rect x="60" y="15" width="30" height="30" fill="yellow"/>
+	<rect x="80" y="20" width="30" height="30" fill="red"/>
+	</svg>
+</div>
+
+<!-- 투명도를 적용한 RGBA SVG 도형-->
+<div>
+<svg width="100%">
+
+	<circle cx="25" cy="25" r="20" fill="rgba(128, 0, 128, 1.0)"/>
+	<circle cx="50" cy="25" r="20" fill="rgba(0, 0, 125, 0.75)"/>
+	<circle cx="75" cy="25" r="20" fill="rgba(0, 255, 0, 0.5)"/>
+	<circle cx="100" cy="25" r="20" fill="rgba(255, 255, 0, 0.25)"/>
+	<circle cx="125" cy="25" r="20" fill="rgba(255, 0, 0, 0.1)"/>
+	</svg>
+</div>
+
+</body>
 </html>
