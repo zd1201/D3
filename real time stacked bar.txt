@@ -1,0 +1,192 @@
+	var NAMES = ["Apple", "Banana", "Coconut", "Grapes", "Kiwi", "Lemon", "Mango", "Orange", "Peach", "Raspberries", "Strawberries", "Watermelon"];
+	 
+	var WIDTH = 960;
+	var HEIGHT = 500;
+	 
+	var random = d3.randomUniform(10, 200);
+	
+	
+	// 정수형 랜덤 값 생성
+	var randomInt = function randomInt() {
+	  return parseInt(Math.round(random()));
+	};
+	
+	// 데이터 생성
+	function generate() {
+	  var n = 5 + parseInt(Math.round(Math.random() * 5));
+	 
+	  var names = d3.shuffle([].concat(NAMES)).slice(0, n);
+	  
+	  var obj = {};
+	  
+	  // Assign random numbers to activated names
+	  names.forEach(function (name) {
+	    return obj[name] = randomInt();
+	  });
+	  
+	  // Assign zeros to inactivated names for transition
+	  NAMES.filter(function (name) {
+	    return names.indexOf(name) === -1;
+	  }).forEach(function (name) {
+	    obj[name] = 0;
+	  });
+	  return obj;
+	}
+	 
+	var MAX = 8;
+	var store = [],
+	    seq = 0;
+	
+	
+	function prepare() {
+	
+	// 새로 생성한 데이터를 data 변수에 저장
+	  var data = generate();
+	  data.i = seq++;
+	  
+	  // store 시작점에 data를 추가
+	  store.unshift(data);
+	  
+	  //shallow copy를 store에 저장
+	  store = store.slice(0, MAX);
+	  return store;
+	}
+	 
+	var svg = d3.select("#chart").attr("width", WIDTH).attr("height", HEIGHT);
+	 
+	var color = d3.scaleOrdinal(d3.schemeCategory20);
+	var fader = d3.scaleLinear().domain([0, MAX]).range([1, 0]);
+	 
+	function update(data) {
+	  var t = d3.transition().duration(500);
+	 
+	  // Preprocess data
+	  data = data.map(function (datum) {
+	    var seq = datum.i;
+	    datum = d3.keys(datum).sort().map(function (key) {
+	      return { key: key, value: datum[key] };
+	    });
+	    datum.i = seq;
+	    var total = 0;
+	    datum.forEach(function (d) {
+	      d.base = total;
+	      total += d.value;
+	    });
+	    return datum;
+	  });
+	 
+	  // Setup parent references for transition
+	  data.forEach(function (datum, i, array) {
+	    var parent = { i: i, array: array };
+	    datum.forEach(function (d) {
+	      d.parent = parent;
+	    });
+	  });
+	 
+	  var x = data.map(function (datum) {
+	    return d3.scaleLinear().domain([0, d3.sum(datum, function (d) {
+	      return d.value;
+	    })]).range([0, WIDTH]);
+	  });
+	 
+	  var w = x.map(function (xx) {
+	    return function (d) {
+	      var width = xx(d.value) - 1;
+	      return width < 0 ? 0 : width;
+	    };
+	  });
+	 
+	  // [JOIN] bar
+	  var bar = svg.selectAll(".bar")
+	  			.data(data, function (datum) {
+	  				return datum.i;
+	  			});
+	 
+	  // [ENTER] bar
+	  var barEnter = bar.enter()
+	  					.append("g")
+	  					.attr("class", "bar")
+	  					.attr("transform", function (_, i) {
+	  						return "translate(0," + i * 32 + ")";
+	  					});
+	 
+	  // [UPDATE] bar
+	  bar.attr("opacity", function (_, i) {
+	    return fader(i - 1);
+	  }).transition(t).attr("transform", function (_, i) {
+	    return "translate(0," + i * 32 + ")";
+	  }).attr("opacity", function (_, i) {
+	    return fader(i);
+	  });
+	 
+	  // [EXIT] bar
+	  bar.exit().transition(t)
+	  .attr("transform", function (_, i) {
+	    return "translate(0," + (i + 1) * 32 + ")";
+	  }).attr("opacity", 0)
+	  	.remove();
+	 
+	  // [JOIN] bar > stack
+	  var stack = barEnter.selectAll(".stack")
+	  					.data(function (datum) {
+						    return datum;
+						  }, function (d) {
+						    return d.key;
+						  });
+	 
+	  // [ENTER] bar > stack
+	  var stackEnter = stack.enter().append("rect").attr("class", "stack").attr("x", function (d, i) {
+	    if (d.parent.i + 1 < d.parent.array.length) {
+	      var prevArray = d.parent.array[d.parent.i + 1];
+	      var prev = prevArray[i];
+	      return x[prev.parent.i](prev.base);
+	    } else {
+	      return 0;
+	    }
+	  })
+	  .attr("y", 0)
+	  .attr("width", function (d, i) {
+	    if (d.parent.i + 1 < d.parent.array.length) {
+	      var prevArray = d.parent.array[d.parent.i + 1];
+	      var prev = prevArray[i];
+	      return w[prev.parent.i](prev);
+	    } else {
+	      return 0;
+	    }
+	  }).attr("height", 26)
+	  	.attr("fill", function (d) {
+	  		return color(d.key);
+	  	})
+	  	.transition(t)
+	  	.delay(250)
+	  	.attr("x", function (d) {
+	  		return x[d.parent.i](d.base);
+	  	})
+	  	.attr("width", function (d) {
+	  		return w[d.parent.i](d);
+	  });
+	 
+	  // [UPDATE] bar > stack
+	  stack.transition(t)
+		  .attr("x", function (d) {
+		    return x[d.parent.i](d.base);
+		  })
+		  .attr("width", function (d) {
+		    return w[d.parent.i](d);
+		  });
+	 
+	  // [EXIT] bar > stack
+	  stack.exit()
+		  .transition(t)
+		  .attr("x", function (d) {
+		    return x[d.parent.i](d.base);
+		  })
+		  .attr("width", 0)
+		  .remove();
+	}
+	 
+	update(prepare());
+	 
+	d3.interval(function () {
+	  update(prepare());
+	}, 2000);
